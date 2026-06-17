@@ -2,15 +2,25 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Iron & Mud - Menu</title>
+<title>Iron & Mud</title>
 
 <style>
 body{
   margin:0;
-  background:#111;
+  background:#0f0f0f;
   color:white;
   font-family:Arial;
   overflow:hidden;
+}
+
+.bg{
+  position:absolute;
+  width:100%;
+  height:100%;
+  background:linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.9)),
+  url("https://images.unsplash.com/photo-1543968996-ee822b8176ba");
+  background-size:cover;
+  filter:contrast(1.1) brightness(0.6);
 }
 
 .center{
@@ -22,38 +32,51 @@ body{
 }
 
 h1{
-  font-size:60px;
+  font-size:70px;
   margin:0;
+  letter-spacing:3px;
 }
 
 button{
-  width:260px;
+  width:250px;
   padding:12px;
-  margin:8px;
+  margin:10px;
   font-size:18px;
-  cursor:pointer;
-  border:1px solid white;
   background:black;
   color:white;
+  border:1px solid white;
+  cursor:pointer;
 }
 
 button:hover{
   background:white;
   color:black;
 }
+
+.small{
+  position:absolute;
+  bottom:10px;
+  right:10px;
+  font-size:12px;
+  opacity:0.6;
+}
 </style>
 </head>
 
 <body>
 
+<div class="bg"></div>
+
 <div class="center">
   <h1>IRON & MUD</h1>
 
   <button onclick="location.href='game.html'">PLAY</button>
-  <button onclick="alert('Create Soldier Coming Soon')">CREATE SOLDIER</button>
-  <button onclick="alert('Encyclopedia Coming Soon')">ENCYCLOPEDIA</button>
-  <button onclick="alert('Settings Coming Soon')">SETTINGS</button>
+  <button onclick="alert('Coming Soon')">CREATE SOLDIER</button>
+  <button onclick="alert('Coming Soon')">ENCYCLOPEDIA</button>
+  <button onclick="alert('Coming Soon')">SETTINGS</button>
 </div>
+
+<div class="small">WWII Tactical FPS Prototype</div>
 
 </body>
 </html>
