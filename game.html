@@ -243,7 +243,14 @@ addEventListener("resize",()=>{
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight);
 });
+document.body.addEventListener("keydown", e=>{
+  if(e.key==="Escape"){
+    location.href="menu.html";
+  }
+});
+
 </script>
+  
 
 </body>
 </html>
