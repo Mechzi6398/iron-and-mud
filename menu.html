@@ -1,113 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8">
 <title>Iron & Mud - Menu</title>
 
 <style>
 body{
-    margin:0;
-    overflow:hidden;
-    background:#111;
-    color:white;
-    font-family:Arial, sans-serif;
+  margin:0;
+  background:#111;
+  color:white;
+  font-family:Arial;
+  overflow:hidden;
 }
 
-#background{
-    position:fixed;
-    width:100%;
-    height:100%;
-    background:
-    linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,.85));
+.center{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  text-align:center;
 }
 
-#title{
-    position:absolute;
-    top:50px;
-    width:100%;
-    text-align:center;
+h1{
+  font-size:60px;
+  margin:0;
 }
 
-#title h1{
-    font-size:72px;
-    margin:0;
+button{
+  width:260px;
+  padding:12px;
+  margin:8px;
+  font-size:18px;
+  cursor:pointer;
+  border:1px solid white;
+  background:black;
+  color:white;
 }
 
-#title h3{
-    margin-top:10px;
-    color:#ccc;
-}
-
-#menu{
-    position:absolute;
-    left:50%;
-    top:220px;
-    transform:translateX(-50%);
-    text-align:center;
-}
-
-.btn{
-    width:300px;
-    padding:15px;
-    margin:10px;
-    border:2px solid white;
-    cursor:pointer;
-    font-size:24px;
-    transition:.2s;
-}
-
-.btn:hover{
-    background:white;
-    color:black;
-}
-
-#version{
-    position:absolute;
-    bottom:10px;
-    right:15px;
-    color:#999;
+button:hover{
+  background:white;
+  color:black;
 }
 </style>
 </head>
 
 <body>
 
-<div id="background"></div>
+<div class="center">
+  <h1>IRON & MUD</h1>
 
-<div id="title">
-    <h1>IRON & MUD</h1>
-    <h3>1939 - 1941</h3>
-</div>
-
-<div id="menu">
-
-    <div class="btn" onclick="alert('Coming Soon')">
-        PLAY
-    </div>
-
-    <div class="btn" onclick="alert('Create Soldier Coming Soon')">
-        CREATE SOLDIER
-    </div>
-
-    <div class="btn" onclick="alert('Historical Characters Coming Soon')">
-        HISTORICAL CHARACTERS
-    </div>
-
-    <div class="btn" onclick="alert('Encyclopedia Coming Soon')">
-        ENCYCLOPEDIA
-    </div>
-
-    <div class="btn" onclick="alert('Settings Coming Soon')">
-        SETTINGS
-    </div>
-
-    <div class="btn" onclick="alert('Iron & Mud Prototype')">
-        CREDITS
-    </div>
-
-</div>
-
-<div id="version">
-v0.1 Prototype
+  <button onclick="location.href='game.html'">PLAY</button>
+  <button onclick="alert('Create Soldier Coming Soon')">CREATE SOLDIER</button>
+  <button onclick="alert('Encyclopedia Coming Soon')">ENCYCLOPEDIA</button>
+  <button onclick="alert('Settings Coming Soon')">SETTINGS</button>
 </div>
 
 </body>
