@@ -6,30 +6,41 @@
 
 <style>
 body{
-  margin:0;
-  overflow:hidden;
-  background:black;
+    margin:0;
+    overflow:hidden;
+    background:black;
 }
 
 #hud{
-  position:absolute;
-  top:10px;
-  left:10px;
-  color:white;
-  font-family:Arial;
-  z-index:100;
+    position:absolute;
+    top:10px;
+    left:10px;
+    color:white;
+    font-family:Arial;
+    font-size:20px;
+    z-index:100;
 }
 
 #crosshair{
-  position:absolute;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-  color:white;
-  font-size:30px;
-  z-index:100;
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    color:white;
+    font-size:30px;
+    z-index:100;
+}
+
+#help{
+    position:absolute;
+    bottom:10px;
+    left:10px;
+    color:white;
+    font-family:Arial;
+    z-index:100;
 }
 </style>
+
 </head>
 <body>
 
@@ -40,12 +51,16 @@ Health: 100
 
 <div id="crosshair">+</div>
 
+<div id="help">
+WASD = Move
+</div>
+
 <script type="module">
 
 import * as THREE from 'https://unpkg.com/three@0.165.0/build/three.module.js';
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xaec6cf);
+scene.background = new THREE.Color(0x87ceeb);
 
 const camera = new THREE.PerspectiveCamera(
 75,
@@ -54,30 +69,166 @@ window.innerWidth/window.innerHeight,
 1000
 );
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth,window.innerHeight);
-document.body.appendChild(renderer.domElement);
+const renderer = new THREE.WebGLRenderer({
+    antialias:true
+});
+
+renderer.setSize(
+window.innerWidth,
+window.innerHeight
+);
+
+document.body.appendChild(
+renderer.domElement
+);
 
 camera.position.set(0,2,5);
 
-const light = new THREE.DirectionalLight(0xffffff,2);
-light.position.set(10,20,10);
-scene.add(light);
+const sun = new THREE.DirectionalLight(
+0xffffff,
+2
+);
 
-const ambient = new THREE.AmbientLight(0xffffff,1);
+sun.position.set(20,30,20);
+scene.add(sun);
+
+const ambient = new THREE.AmbientLight(
+0xffffff,
+1
+);
+
 scene.add(ambient);
 
 const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(200,200),
-  new THREE.MeshLambertMaterial({color:0xffffff})
+new THREE.PlaneGeometry(500,500),
+new THREE.MeshLambertMaterial({
+    color:0xffffff
+})
 );
 
 ground.rotation.x = -Math.PI/2;
 scene.add(ground);
 
+for(let i=0;i<30;i++){
+
+    const trench = new THREE.Mesh(
+        new THREE.BoxGeometry(4,1,15),
+        new THREE.MeshLambertMaterial({
+            color:0x654321
+        })
+    );
+
+    trench.position.set(
+        (Math.random()-0.5)*200,
+        0.5,
+        (Math.random()-0.5)*200
+    );
+
+    scene.add(trench);
+}
+
+for(let i=0;i<50;i++){
+
+    const tree = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+            0.5,
+            0.5,
+            6
+        ),
+        new THREE.MeshLambertMaterial({
+            color:0x3d2b1f
+        })
+    );
+
+    tree.position.set(
+        (Math.random()-0.5)*300,
+        3,
+        (Math.random()-0.5)*300
+    );
+
+    scene.add(tree);
+}
+
+const enemy = new THREE.Mesh(
+new THREE.BoxGeometry(1,2,1),
+new THREE.MeshLambertMaterial({
+    color:0x444444
+})
+);
+
+enemy.position.set(
+0,
+1,
+-20
+);
+
+scene.add(enemy);
+
+const keys = {};
+
+document.addEventListener(
+"keydown",
+(e)=>{
+keys[e.key.toLowerCase()] = true;
+}
+);
+
+document.addEventListener(
+"keyup",
+(e)=>{
+keys[e.key.toLowerCase()] = false;
+}
+);
+
+function updatePlayer(){
+
+    const speed = 0.2;
+
+    if(keys["w"]){
+        camera.position.z -= speed;
+    }
+
+    if(keys["s"]){
+        camera.position.z += speed;
+    }
+
+    if(keys["a"]){
+        camera.position.x -= speed;
+    }
+
+    if(keys["d"]){
+        camera.position.x += speed;
+    }
+}
+
+window.addEventListener(
+"resize",
+()=>{
+camera.aspect =
+window.innerWidth /
+window.innerHeight;
+
+camera.updateProjectionMatrix();
+
+renderer.setSize(
+window.innerWidth,
+window.innerHeight
+);
+}
+);
+
 function animate(){
-  requestAnimationFrame(animate);
-  renderer.render(scene,camera);
+
+    requestAnimationFrame(
+        animate
+    );
+
+    updatePlayer();
+
+    renderer.render(
+        scene,
+        camera
+    );
 }
 
 animate();
