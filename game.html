@@ -18,7 +18,7 @@ body{
   left:10px;
   color:white;
   z-index:10;
-  font-size:18px;
+  font-size:16px;
 }
 
 #crosshair{
@@ -27,18 +27,28 @@ body{
   top:50%;
   transform:translate(-50%,-50%);
   color:white;
-  font-size:24px;
+  font-size:22px;
   z-index:10;
 }
 
-canvas{ display:block; }
+#hit{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  color:red;
+  font-size:30px;
+  display:none;
+  z-index:20;
+}
 </style>
 </head>
 
 <body>
 
-<div id="hud">IRON & MUD<br>Health: 100<br>Ammo: 5/5</div>
+<div id="hud"></div>
 <div id="crosshair">+</div>
+<div id="hit">✕</div>
 
 <script type="module">
 import * as THREE from 'https://unpkg.com/three@0.165.0/build/three.module.js';
@@ -54,9 +64,8 @@ renderer.setSize(innerWidth, innerHeight);
 document.body.appendChild(renderer.domElement);
 
 /* ================= LIGHT ================= */
-scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-
-const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+scene.add(new THREE.AmbientLight(0xffffff,0.6));
+const sun = new THREE.DirectionalLight(0xffffff,1.2);
 sun.position.set(20,30,10);
 scene.add(sun);
 
@@ -70,13 +79,23 @@ scene.add(ground);
 
 /* ================= TREES ================= */
 for(let i=0;i<40;i++){
-  const tree = new THREE.Mesh(
+  const t = new THREE.Mesh(
     new THREE.CylinderGeometry(0.5,0.8,6),
     new THREE.MeshLambertMaterial({ color:0x3b2a1a })
   );
-  tree.position.set((Math.random()-0.5)*200,3,(Math.random()-0.5)*200);
-  scene.add(tree);
+  t.position.set((Math.random()-0.5)*200,3,(Math.random()-0.5)*200);
+  scene.add(t);
 }
+
+/* ================= PLAYER ================= */
+camera.position.set(0,2,5);
+
+let move = {};
+let sprint = false;
+
+let health = 100;
+let ammo = 5;
+let mag = 5;
 
 /* ================= ENEMY ================= */
 const enemy = new THREE.Mesh(
@@ -86,167 +105,144 @@ const enemy = new THREE.Mesh(
 enemy.position.set(0,1,-20);
 scene.add(enemy);
 
-/* ================= SNOW ================= */
-const snowGeo = new THREE.BufferGeometry();
-const snowCount = 300;
+let enemyHP = 100;
 
-const positions = [];
-for(let i=0;i<snowCount;i++){
-  positions.push(
-    (Math.random()-0.5)*200,
-    Math.random()*50,
-    (Math.random()-0.5)*200
-  );
-}
-
-snowGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions,3));
-
-const snow = new THREE.Points(
-  snowGeo,
-  new THREE.PointsMaterial({ color:0xffffff, size:0.3 })
-);
-
-scene.add(snow);
-
-/* ================= PLAYER ================= */
-camera.position.set(0,2,5);
-
-let velocity = new THREE.Vector3();
-let move = {};
-
-/* keyboard */
-addEventListener("keydown", e=>{
+/* ================= INPUT ================= */
+addEventListener("keydown",e=>{
   move[e.key.toLowerCase()] = true;
-  if(e.key === "Shift") sprint = true;
+  if(e.key==="Shift") sprint=true;
+  if(e.key==="r") reload();
 });
 
-addEventListener("keyup", e=>{
+addEventListener("keyup",e=>{
   move[e.key.toLowerCase()] = false;
-  if(e.key === "Shift") sprint = false;
+  if(e.key==="Shift") sprint=false;
 });
-
-/* sprint */
-let sprint = false;
 
 /* ================= MOUSE LOOK ================= */
-let yaw = 0, pitch = 0;
+let yaw=0,pitch=0;
 
-document.body.addEventListener("click", ()=>{
+document.body.addEventListener("click",()=>{
   document.body.requestPointerLock();
 });
 
-document.addEventListener("mousemove",(e)=>{
-  if(document.pointerLockElement === document.body){
-    yaw -= e.movementX * 0.002;
-    pitch -= e.movementY * 0.002;
-    pitch = Math.max(-1.5, Math.min(1.5, pitch));
+document.addEventListener("mousemove",e=>{
+  if(document.pointerLockElement===document.body){
+    yaw -= e.movementX*0.002;
+    pitch -= e.movementY*0.002;
+    pitch = Math.max(-1.5,Math.min(1.5,pitch));
   }
 });
 
-/* ================= SHOOTING ================= */
-let ammo = 5;
-
-addEventListener("click", ()=>{
-  if(document.pointerLockElement !== document.body) return;
-
-  if(ammo <= 0) return;
+/* ================= SHOOT ================= */
+addEventListener("click",()=>{
+  if(document.pointerLockElement!==document.body) return;
+  if(ammo<=0) return;
 
   ammo--;
-  document.getElementById("hud").innerHTML =
-  `IRON & MUD<br>Health: 100<br>Ammo: ${ammo}/5`;
 
   const ray = new THREE.Raycaster();
-  ray.setFromCamera(new THREE.Vector2(0,0), camera);
+  ray.setFromCamera(new THREE.Vector2(0,0),camera);
 
   const hit = ray.intersectObject(enemy);
-  if(hit.length > 0){
-    enemy.position.x += (Math.random()-0.5)*5;
-    enemy.position.z += (Math.random()-0.5)*5;
-  }
-});
 
-/* ================= CONTROLLER ================= */
-let gp = null;
+  if(hit.length>0){
+    enemyHP -= 35;
 
-addEventListener("gamepadconnected",(e)=>{
-  gp = e.gamepad;
-});
+    showHit();
 
-/* ================= UPDATE ================= */
-function update(){
-
-  /* mouse camera */
-  camera.rotation.order = "YXZ";
-  camera.rotation.y = yaw;
-  camera.rotation.x = pitch;
-
-  /* movement */
-  let speed = sprint ? 0.25 : 0.15;
-
-  let forward = new THREE.Vector3(
-    -Math.sin(yaw),
-    0,
-    -Math.cos(yaw)
-  );
-
-  let right = new THREE.Vector3(
-    forward.z,
-    0,
-    -forward.x
-  );
-
-  if(move["w"]) camera.position.addScaledVector(forward, speed);
-  if(move["s"]) camera.position.addScaledVector(forward, -speed);
-  if(move["a"]) camera.position.addScaledVector(right, -speed);
-  if(move["d"]) camera.position.addScaledVector(right, speed);
-
-  /* controller movement */
-  if(navigator.getGamepads){
-    const pads = navigator.getGamepads();
-    const p = pads[0];
-
-    if(p){
-      let lx = p.axes[0];
-      let ly = p.axes[1];
-      let rx = p.axes[2];
-      let ry = p.axes[3];
-
-      yaw -= rx * 0.03;
-      pitch -= ry * 0.03;
-
-      camera.position.addScaledVector(forward, -ly * speed);
-      camera.position.addScaledVector(right, lx * speed);
+    if(enemyHP<=0){
+      enemyHP=100;
+      enemy.position.set(
+        (Math.random()-0.5)*50,
+        1,
+        (Math.random()-0.5)*50
+      );
     }
   }
 
-  /* snow fall */
-  const pos = snow.geometry.attributes.position.array;
-  for(let i=1;i<pos.length;i+=3){
-    pos[i] -= 0.2;
-    if(pos[i] < 0) pos[i] = 50;
-  }
-  snow.geometry.attributes.position.needsUpdate = true;
+  updateHUD();
+});
 
-  /* enemy AI simple patrol */
-  enemy.position.x += Math.sin(Date.now()*0.001)*0.01;
-
+/* ================= RELOAD ================= */
+function reload(){
+  ammo = mag;
+  updateHUD();
 }
+
+/* ================= HIT MARKER ================= */
+function showHit(){
+  const h = document.getElementById("hit");
+  h.style.display="block";
+  setTimeout(()=>h.style.display="none",100);
+}
+
+/* ================= MOVEMENT ================= */
+function updatePlayer(){
+
+  let speed = sprint?0.25:0.15;
+
+  let forward = new THREE.Vector3(
+    -Math.sin(yaw),0,-Math.cos(yaw)
+  );
+
+  let right = new THREE.Vector3(
+    forward.z,0,-forward.x
+  );
+
+  if(move["w"]) camera.position.addScaledVector(forward,speed);
+  if(move["s"]) camera.position.addScaledVector(forward,-speed);
+  if(move["a"]) camera.position.addScaledVector(right,-speed);
+  if(move["d"]) camera.position.addScaledVector(right,speed);
+
+  camera.rotation.order="YXZ";
+  camera.rotation.y=yaw;
+  camera.rotation.x=pitch;
+}
+
+/* ================= ENEMY AI ================= */
+function enemyAI(){
+
+  let dir = new THREE.Vector3().subVectors(camera.position,enemy.position);
+  let dist = dir.length();
+
+  if(dist<25){
+    dir.normalize();
+    enemy.position.addScaledVector(dir,0.05);
+
+    if(dist<5){
+      health -= 0.5;
+      updateHUD();
+    }
+  } else {
+    enemy.position.x += Math.sin(Date.now()*0.001)*0.02;
+  }
+}
+
+/* ================= HUD ================= */
+function updateHUD(){
+  document.getElementById("hud").innerHTML =
+  `IRON & MUD<br>HP: ${Math.floor(health)}<br>Ammo: ${ammo}/${mag}`;
+}
+updateHUD();
 
 /* ================= LOOP ================= */
 function animate(){
   requestAnimationFrame(animate);
-  update();
+
+  updatePlayer();
+  enemyAI();
+
   renderer.render(scene,camera);
 }
 animate();
 
-/* resize */
+/* ================= RESIZE ================= */
 addEventListener("resize",()=>{
-  camera.aspect = innerWidth/innerHeight;
+  camera.aspect=innerWidth/innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight);
 });
-
 </script>
 
 </body>
