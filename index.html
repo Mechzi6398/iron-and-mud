@@ -2,9 +2,79 @@
 <html>
 <head>
 <title>Iron & Mud</title>
+<style>
+body{
+margin:0;
+background:#111;
+color:white;
+font-family:Arial;
+overflow:hidden;
+}
+
+#bg{
+position:fixed;
+width:100%;
+height:100%;
+background:
+linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.8)),
+url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee");
+background-size:cover;
+background-position:center;
+}
+
+#ui{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+text-align:center;
+}
+
+#bar{
+width:400px;
+height:25px;
+border:2px solid white;
+margin:auto;
+}
+
+#fill{
+height:100%;
+width:0%;
+background:white;
+}
+</style>
 </head>
 <body>
+
+<div id="bg"></div>
+
+<div id="ui">
 <h1>IRON & MUD</h1>
-<p>If you can see this, GitHub Pages is working.</p>
+<h3>1939 - 1941</h3>
+
+<div id="bar">
+<div id="fill"></div>
+</div>
+
+<p id="percent">0%</p>
+<p id="tip">Tip: Stay near your squad leader.</p>
+</div>
+
+<script>
+let p=0;
+
+let load=setInterval(()=>{
+p++;
+
+document.getElementById("fill").style.width=p+"%";
+document.getElementById("percent").innerText=p+"%";
+
+if(p>=100){
+clearInterval(load);
+location.href="menu.html";
+}
+},40);
+</script>
+
 </body>
 </html>
