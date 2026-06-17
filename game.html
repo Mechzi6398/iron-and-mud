@@ -6,232 +6,246 @@
 
 <style>
 body{
-    margin:0;
-    overflow:hidden;
-    background:black;
+  margin:0;
+  overflow:hidden;
+  background:black;
+  font-family:Arial;
 }
 
 #hud{
-    position:absolute;
-    top:10px;
-    left:10px;
-    color:white;
-    font-family:Arial;
-    font-size:20px;
-    z-index:100;
+  position:absolute;
+  top:10px;
+  left:10px;
+  color:white;
+  z-index:10;
+  font-size:18px;
 }
 
 #crosshair{
-    position:absolute;
-    left:50%;
-    top:50%;
-    transform:translate(-50%,-50%);
-    color:white;
-    font-size:30px;
-    z-index:100;
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  color:white;
+  font-size:24px;
+  z-index:10;
 }
 
-#help{
-    position:absolute;
-    bottom:10px;
-    left:10px;
-    color:white;
-    font-family:Arial;
-    z-index:100;
-}
+canvas{ display:block; }
 </style>
-
 </head>
+
 <body>
 
-<div id="hud">
-IRON & MUD<br>
-Health: 100
-</div>
-
+<div id="hud">IRON & MUD<br>Health: 100<br>Ammo: 5/5</div>
 <div id="crosshair">+</div>
 
-<div id="help">
-WASD = Move
-</div>
-
-<script type="module" src="js/game.js"></script>
-
+<script type="module">
 import * as THREE from 'https://unpkg.com/three@0.165.0/build/three.module.js';
 
+/* ================= SCENE ================= */
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87ceeb);
+scene.fog = new THREE.Fog(0xaec6cf, 10, 120);
 
-const camera = new THREE.PerspectiveCamera(
-75,
-window.innerWidth/window.innerHeight,
-0.1,
-1000
-);
+const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
 
-const renderer = new THREE.WebGLRenderer({
-    antialias:true
-});
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
 
-renderer.setSize(
-window.innerWidth,
-window.innerHeight
-);
+/* ================= LIGHT ================= */
+scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
-document.body.appendChild(
-renderer.domElement
-);
-
-camera.position.set(0,2,5);
-
-const sun = new THREE.DirectionalLight(
-0xffffff,
-2
-);
-
-sun.position.set(20,30,20);
+const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+sun.position.set(20,30,10);
 scene.add(sun);
 
-const ambient = new THREE.AmbientLight(
-0xffffff,
-1
-);
-
-scene.add(ambient);
-
+/* ================= GROUND ================= */
 const ground = new THREE.Mesh(
-new THREE.PlaneGeometry(500,500),
-new THREE.MeshLambertMaterial({
-    color:0xffffff
-})
+  new THREE.PlaneGeometry(500,500),
+  new THREE.MeshLambertMaterial({ color:0xe6e6e6 })
 );
-
 ground.rotation.x = -Math.PI/2;
 scene.add(ground);
 
-for(let i=0;i<30;i++){
-
-    const trench = new THREE.Mesh(
-        new THREE.BoxGeometry(4,1,15),
-        new THREE.MeshLambertMaterial({
-            color:0x654321
-        })
-    );
-
-    trench.position.set(
-        (Math.random()-0.5)*200,
-        0.5,
-        (Math.random()-0.5)*200
-    );
-
-    scene.add(trench);
+/* ================= TREES ================= */
+for(let i=0;i<40;i++){
+  const tree = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.5,0.8,6),
+    new THREE.MeshLambertMaterial({ color:0x3b2a1a })
+  );
+  tree.position.set((Math.random()-0.5)*200,3,(Math.random()-0.5)*200);
+  scene.add(tree);
 }
 
-for(let i=0;i<50;i++){
-
-    const tree = new THREE.Mesh(
-        new THREE.CylinderGeometry(
-            0.5,
-            0.5,
-            6
-        ),
-        new THREE.MeshLambertMaterial({
-            color:0x3d2b1f
-        })
-    );
-
-    tree.position.set(
-        (Math.random()-0.5)*300,
-        3,
-        (Math.random()-0.5)*300
-    );
-
-    scene.add(tree);
-}
-
+/* ================= ENEMY ================= */
 const enemy = new THREE.Mesh(
-new THREE.BoxGeometry(1,2,1),
-new THREE.MeshLambertMaterial({
-    color:0x444444
-})
+  new THREE.BoxGeometry(1,2,1),
+  new THREE.MeshLambertMaterial({ color:0x444444 })
 );
-
-enemy.position.set(
-0,
-1,
--20
-);
-
+enemy.position.set(0,1,-20);
 scene.add(enemy);
 
-const keys = {};
+/* ================= SNOW ================= */
+const snowGeo = new THREE.BufferGeometry();
+const snowCount = 300;
 
-document.addEventListener(
-"keydown",
-(e)=>{
-keys[e.key.toLowerCase()] = true;
-}
-);
-
-document.addEventListener(
-"keyup",
-(e)=>{
-keys[e.key.toLowerCase()] = false;
-}
-);
-
-function updatePlayer(){
-
-    const speed = 0.2;
-
-    if(keys["w"]){
-        camera.position.z -= speed;
-    }
-
-    if(keys["s"]){
-        camera.position.z += speed;
-    }
-
-    if(keys["a"]){
-        camera.position.x -= speed;
-    }
-
-    if(keys["d"]){
-        camera.position.x += speed;
-    }
+const positions = [];
+for(let i=0;i<snowCount;i++){
+  positions.push(
+    (Math.random()-0.5)*200,
+    Math.random()*50,
+    (Math.random()-0.5)*200
+  );
 }
 
-window.addEventListener(
-"resize",
-()=>{
-camera.aspect =
-window.innerWidth /
-window.innerHeight;
+snowGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions,3));
 
-camera.updateProjectionMatrix();
-
-renderer.setSize(
-window.innerWidth,
-window.innerHeight
+const snow = new THREE.Points(
+  snowGeo,
+  new THREE.PointsMaterial({ color:0xffffff, size:0.3 })
 );
+
+scene.add(snow);
+
+/* ================= PLAYER ================= */
+camera.position.set(0,2,5);
+
+let velocity = new THREE.Vector3();
+let move = {};
+
+/* keyboard */
+addEventListener("keydown", e=>{
+  move[e.key.toLowerCase()] = true;
+  if(e.key === "Shift") sprint = true;
+});
+
+addEventListener("keyup", e=>{
+  move[e.key.toLowerCase()] = false;
+  if(e.key === "Shift") sprint = false;
+});
+
+/* sprint */
+let sprint = false;
+
+/* ================= MOUSE LOOK ================= */
+let yaw = 0, pitch = 0;
+
+document.body.addEventListener("click", ()=>{
+  document.body.requestPointerLock();
+});
+
+document.addEventListener("mousemove",(e)=>{
+  if(document.pointerLockElement === document.body){
+    yaw -= e.movementX * 0.002;
+    pitch -= e.movementY * 0.002;
+    pitch = Math.max(-1.5, Math.min(1.5, pitch));
+  }
+});
+
+/* ================= SHOOTING ================= */
+let ammo = 5;
+
+addEventListener("click", ()=>{
+  if(document.pointerLockElement !== document.body) return;
+
+  if(ammo <= 0) return;
+
+  ammo--;
+  document.getElementById("hud").innerHTML =
+  `IRON & MUD<br>Health: 100<br>Ammo: ${ammo}/5`;
+
+  const ray = new THREE.Raycaster();
+  ray.setFromCamera(new THREE.Vector2(0,0), camera);
+
+  const hit = ray.intersectObject(enemy);
+  if(hit.length > 0){
+    enemy.position.x += (Math.random()-0.5)*5;
+    enemy.position.z += (Math.random()-0.5)*5;
+  }
+});
+
+/* ================= CONTROLLER ================= */
+let gp = null;
+
+addEventListener("gamepadconnected",(e)=>{
+  gp = e.gamepad;
+});
+
+/* ================= UPDATE ================= */
+function update(){
+
+  /* mouse camera */
+  camera.rotation.order = "YXZ";
+  camera.rotation.y = yaw;
+  camera.rotation.x = pitch;
+
+  /* movement */
+  let speed = sprint ? 0.25 : 0.15;
+
+  let forward = new THREE.Vector3(
+    -Math.sin(yaw),
+    0,
+    -Math.cos(yaw)
+  );
+
+  let right = new THREE.Vector3(
+    forward.z,
+    0,
+    -forward.x
+  );
+
+  if(move["w"]) camera.position.addScaledVector(forward, speed);
+  if(move["s"]) camera.position.addScaledVector(forward, -speed);
+  if(move["a"]) camera.position.addScaledVector(right, -speed);
+  if(move["d"]) camera.position.addScaledVector(right, speed);
+
+  /* controller movement */
+  if(navigator.getGamepads){
+    const pads = navigator.getGamepads();
+    const p = pads[0];
+
+    if(p){
+      let lx = p.axes[0];
+      let ly = p.axes[1];
+      let rx = p.axes[2];
+      let ry = p.axes[3];
+
+      yaw -= rx * 0.03;
+      pitch -= ry * 0.03;
+
+      camera.position.addScaledVector(forward, -ly * speed);
+      camera.position.addScaledVector(right, lx * speed);
+    }
+  }
+
+  /* snow fall */
+  const pos = snow.geometry.attributes.position.array;
+  for(let i=1;i<pos.length;i+=3){
+    pos[i] -= 0.2;
+    if(pos[i] < 0) pos[i] = 50;
+  }
+  snow.geometry.attributes.position.needsUpdate = true;
+
+  /* enemy AI simple patrol */
+  enemy.position.x += Math.sin(Date.now()*0.001)*0.01;
+
 }
-);
 
+/* ================= LOOP ================= */
 function animate(){
-
-    requestAnimationFrame(
-        animate
-    );
-
-    updatePlayer();
-
-    renderer.render(
-        scene,
-        camera
-    );
+  requestAnimationFrame(animate);
+  update();
+  renderer.render(scene,camera);
 }
-
 animate();
+
+/* resize */
+addEventListener("resize",()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
 
 </script>
 
