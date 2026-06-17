@@ -1,18 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Iron & Mud</title>
-  <style>
-    body{
-      margin:0;
-      overflow:hidden;
-    }
-  </style>
+<meta charset="utf-8">
+<title>Iron & Mud Test</title>
+<style>
+body{
+  margin:0;
+  overflow:hidden;
+}
+canvas{
+  display:block;
+}
+</style>
 </head>
 <body>
 
-<h1>Iron & Mud</h1>
-<p>Game loading...</p>
+<canvas id="c"></canvas>
+
+<script>
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+ctx.fillStyle = "green";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ctx.fillStyle = "white";
+ctx.font = "40px Arial";
+ctx.fillText("IRON & MUD TEST",50,100);
+</script>
 
 </body>
 </html>
