@@ -7,250 +7,76 @@
 <style>
 body{
   margin:0;
-  overflow:hidden;
-  background:black;
+  background:#0f0f0f;
+  color:white;
   font-family:Arial;
+  overflow:hidden;
 }
 
-#hud{
+.bg{
   position:absolute;
-  top:10px;
-  left:10px;
-  color:white;
-  z-index:10;
-  font-size:16px;
+  width:100%;
+  height:100%;
+  background:linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.9)),
+  url("https://images.unsplash.com/photo-1543968996-ee822b8176ba");
+  background-size:cover;
+  filter:contrast(1.1) brightness(0.6);
 }
 
-#crosshair{
+.center{
   position:absolute;
-  left:50%;
   top:50%;
+  left:50%;
   transform:translate(-50%,-50%);
-  color:white;
-  font-size:22px;
-  z-index:10;
+  text-align:center;
 }
 
-#hit{
+h1{
+  font-size:70px;
+  margin:0;
+  letter-spacing:3px;
+}
+
+button{
+  width:250px;
+  padding:12px;
+  margin:10px;
+  font-size:18px;
+  background:black;
+  color:white;
+  border:1px solid white;
+  cursor:pointer;
+}
+
+button:hover{
+  background:white;
+  color:black;
+}
+
+.small{
   position:absolute;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-  color:red;
-  font-size:30px;
-  display:none;
-  z-index:20;
+  bottom:10px;
+  right:10px;
+  font-size:12px;
+  opacity:0.6;
 }
 </style>
 </head>
 
 <body>
 
-<div id="hud"></div>
-<div id="crosshair">+</div>
-<div id="hit">✕</div>
+<div class="bg"></div>
 
-<script type="module">
-import * as THREE from 'https://unpkg.com/three@0.165.0/build/three.module.js';
+<div class="center">
+  <h1>IRON & MUD</h1>
 
-/* ================= SCENE ================= */
-const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0xaec6cf, 10, 120);
+  <button onclick="location.href='game.html'">PLAY</button>
+  <button onclick="alert('Coming Soon')">CREATE SOLDIER</button>
+  <button onclick="alert('Coming Soon')">ENCYCLOPEDIA</button>
+  <button onclick="alert('Coming Soon')">SETTINGS</button>
+</div>
 
-const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
-
-const renderer = new THREE.WebGLRenderer({ antialias:true });
-renderer.setSize(innerWidth, innerHeight);
-document.body.appendChild(renderer.domElement);
-
-/* ================= LIGHT ================= */
-scene.add(new THREE.AmbientLight(0xffffff,0.6));
-const sun = new THREE.DirectionalLight(0xffffff,1.2);
-sun.position.set(20,30,10);
-scene.add(sun);
-
-/* ================= GROUND ================= */
-const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(500,500),
-  new THREE.MeshLambertMaterial({ color:0xe6e6e6 })
-);
-ground.rotation.x = -Math.PI/2;
-scene.add(ground);
-
-/* ================= TREES ================= */
-for(let i=0;i<40;i++){
-  const t = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.5,0.8,6),
-    new THREE.MeshLambertMaterial({ color:0x3b2a1a })
-  );
-  t.position.set((Math.random()-0.5)*200,3,(Math.random()-0.5)*200);
-  scene.add(t);
-}
-
-/* ================= PLAYER ================= */
-camera.position.set(0,2,5);
-
-let move = {};
-let sprint = false;
-
-let health = 100;
-let ammo = 5;
-let mag = 5;
-
-/* ================= ENEMY ================= */
-const enemy = new THREE.Mesh(
-  new THREE.BoxGeometry(1,2,1),
-  new THREE.MeshLambertMaterial({ color:0x444444 })
-);
-enemy.position.set(0,1,-20);
-scene.add(enemy);
-
-let enemyHP = 100;
-
-/* ================= INPUT ================= */
-addEventListener("keydown",e=>{
-  move[e.key.toLowerCase()] = true;
-  if(e.key==="Shift") sprint=true;
-  if(e.key==="r") reload();
-});
-
-addEventListener("keyup",e=>{
-  move[e.key.toLowerCase()] = false;
-  if(e.key==="Shift") sprint=false;
-});
-
-/* ================= MOUSE LOOK ================= */
-let yaw=0,pitch=0;
-
-document.body.addEventListener("click",()=>{
-  document.body.requestPointerLock();
-});
-
-document.addEventListener("mousemove",e=>{
-  if(document.pointerLockElement===document.body){
-    yaw -= e.movementX*0.002;
-    pitch -= e.movementY*0.002;
-    pitch = Math.max(-1.5,Math.min(1.5,pitch));
-  }
-});
-
-/* ================= SHOOT ================= */
-addEventListener("click",()=>{
-  if(document.pointerLockElement!==document.body) return;
-  if(ammo<=0) return;
-
-  ammo--;
-
-  const ray = new THREE.Raycaster();
-  ray.setFromCamera(new THREE.Vector2(0,0),camera);
-
-  const hit = ray.intersectObject(enemy);
-
-  if(hit.length>0){
-    enemyHP -= 35;
-
-    showHit();
-
-    if(enemyHP<=0){
-      enemyHP=100;
-      enemy.position.set(
-        (Math.random()-0.5)*50,
-        1,
-        (Math.random()-0.5)*50
-      );
-    }
-  }
-
-  updateHUD();
-});
-
-/* ================= RELOAD ================= */
-function reload(){
-  ammo = mag;
-  updateHUD();
-}
-
-/* ================= HIT MARKER ================= */
-function showHit(){
-  const h = document.getElementById("hit");
-  h.style.display="block";
-  setTimeout(()=>h.style.display="none",100);
-}
-
-/* ================= MOVEMENT ================= */
-function updatePlayer(){
-
-  let speed = sprint?0.25:0.15;
-
-  let forward = new THREE.Vector3(
-    -Math.sin(yaw),0,-Math.cos(yaw)
-  );
-
-  let right = new THREE.Vector3(
-    forward.z,0,-forward.x
-  );
-
-  if(move["w"]) camera.position.addScaledVector(forward,speed);
-  if(move["s"]) camera.position.addScaledVector(forward,-speed);
-  if(move["a"]) camera.position.addScaledVector(right,-speed);
-  if(move["d"]) camera.position.addScaledVector(right,speed);
-
-  camera.rotation.order="YXZ";
-  camera.rotation.y=yaw;
-  camera.rotation.x=pitch;
-}
-
-/* ================= ENEMY AI ================= */
-function enemyAI(){
-
-  let dir = new THREE.Vector3().subVectors(camera.position,enemy.position);
-  let dist = dir.length();
-
-  if(dist<25){
-    dir.normalize();
-    enemy.position.addScaledVector(dir,0.05);
-
-    if(dist<5){
-      health -= 0.5;
-      updateHUD();
-    }
-  } else {
-    enemy.position.x += Math.sin(Date.now()*0.001)*0.02;
-  }
-}
-
-/* ================= HUD ================= */
-function updateHUD(){
-  document.getElementById("hud").innerHTML =
-  `IRON & MUD<br>HP: ${Math.floor(health)}<br>Ammo: ${ammo}/${mag}`;
-}
-updateHUD();
-
-/* ================= LOOP ================= */
-function animate(){
-  requestAnimationFrame(animate);
-
-  updatePlayer();
-  enemyAI();
-
-  renderer.render(scene,camera);
-}
-animate();
-
-/* ================= RESIZE ================= */
-addEventListener("resize",()=>{
-  camera.aspect=innerWidth/innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);
-});
-document.body.addEventListener("keydown", e=>{
-  if(e.key==="Escape"){
-    location.href="menu.html";
-  }
-});
-
-</script>
-  
+<div class="small">WWII Tactical FPS Prototype</div>
 
 </body>
 </html>
